@@ -1,0 +1,17 @@
+name: personal-news
+runtime: python
+description: Personal News Digest - AWS Fargate Infrastructure
+template:
+  config:
+    aws:region:
+      description: The AWS region to deploy into
+      default: us-east-1
+    personal-news:project-name:
+      description: Name of the project (used for resource naming)
+      default: personal-news
+    personal-news:environment:
+      description: Environment name
+      default: prod
+    personal-news:schedule-time:
+      description: EventBridge schedule expression (default 8:00 AM UTC daily)
+      default: "cron(0 8 * * ? *)"

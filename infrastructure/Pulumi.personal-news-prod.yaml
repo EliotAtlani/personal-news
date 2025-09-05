@@ -1,0 +1,5 @@
+encryptionsalt: v1:1fpUB+Www50=:v1:lBOWiKdg0EO/JNH1:A3Ofv7oetvzSgZVjmf0z98EnwffgKA==
+config:
+  aws:region: us-east-1
+  personal-news:project-name: personal-news
+  personal-news:environment: prod
