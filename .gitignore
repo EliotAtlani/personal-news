@@ -75,3 +75,5 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+
+CLAUDE.local.md

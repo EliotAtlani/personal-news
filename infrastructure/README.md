@@ -15,7 +15,7 @@ AI-powered daily news digest that fetches, summarizes, and emails personalized n
 Deploy to AWS using Pulumi:
 
 ```bash
-./deploy.sh
+../scripts/deploy.sh
 ```
 
 ## Configuration
@@ -23,7 +23,7 @@ Deploy to AWS using Pulumi:
 Update your API keys in AWS Secrets Manager:
 
 ```bash
-./deploy.sh secrets
+../scripts/deploy.sh secrets
 ```
 
 ## Monitoring
@@ -31,5 +31,5 @@ Update your API keys in AWS Secrets Manager:
 View logs:
 
 ```bash
-./deploy.sh logs
+../scripts/deploy.sh logs
 ```

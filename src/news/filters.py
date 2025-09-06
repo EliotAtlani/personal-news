@@ -37,8 +37,15 @@ class ContentFilter:
             self.seen_urls.add(article.url)
             self.seen_titles.add(article.title.lower().strip())
         
-        # Sort by relevance score and recency
-        filtered.sort(key=lambda x: (x.relevance_score, x.published_at), reverse=True)
+        # Sort by relevance score and recency (handle timezone-aware comparison)
+        def sort_key(article):
+            published_at = article.published_at
+            # Make timezone-aware if naive
+            if published_at.tzinfo is None:
+                published_at = published_at.replace(tzinfo=timezone.utc)
+            return (article.relevance_score, published_at)
+        
+        filtered.sort(key=sort_key, reverse=True)
         
         return filtered
     

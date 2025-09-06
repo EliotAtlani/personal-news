@@ -24,7 +24,7 @@ This guide will help you deploy your Personal News Digest application to AWS usi
 
 ### 1. Deploy Everything
 ```bash
-./deploy.sh
+./scripts/deploy.sh
 ```
 
 This command will:
@@ -48,7 +48,7 @@ aws secretsmanager update-secret --secret-id 'personal-news/email-password-prod'
 ### 3. Verify Deployment
 ```bash
 # Check logs
-./deploy.sh logs
+./scripts/deploy.sh logs
 
 # Manual test run (optional)
 aws ecs run-task \
@@ -105,16 +105,16 @@ API keys are loaded from Secrets Manager as environment variables.
 aws cloudformation describe-stacks --stack-name personal-news-prod
 
 # Update only the container image
-./deploy.sh build
+./scripts/deploy.sh build
 
 # View logs
-./deploy.sh logs
+./scripts/deploy.sh logs
 
 # Show secrets setup commands
-./deploy.sh secrets
+./scripts/deploy.sh secrets
 
 # Destroy all resources
-./deploy.sh destroy
+./scripts/deploy.sh destroy
 ```
 
 ## Customization
@@ -141,8 +141,8 @@ Edit `infrastructure/cloudformation.yaml` to adjust:
 
 ### Update Application
 1. Make code changes
-2. Run `./deploy.sh build` to rebuild and deploy
-3. Check logs with `./deploy.sh logs`
+2. Run `./scripts/deploy.sh build` to rebuild and deploy
+3. Check logs with `./scripts/deploy.sh logs`
 
 ## Troubleshooting
 

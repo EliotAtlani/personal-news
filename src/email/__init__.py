@@ -1,1 +1,1 @@
-# Email module
+# email module

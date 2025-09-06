@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 import os
 
-# Add src to path for imports
+# add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
 from scheduler import NewsScheduler
@@ -23,11 +23,11 @@ def setup_logging(verbose: bool = False):
     """Set up logging configuration."""
     level = logging.DEBUG if verbose else logging.INFO
     
-    # Create logs directory if it doesn't exist
+    # create logs directory if it doesn't exist
     log_dir = Path(__file__).parent.parent / "logs"
     log_dir.mkdir(exist_ok=True)
     
-    # Configure logging
+    # configure logging
     logging.basicConfig(
         level=level,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -90,11 +90,11 @@ async def start_scheduler(config_path: str = None, verbose: bool = False):
     try:
         scheduler = NewsScheduler(config_path)
         
-        # Show status
+        # show status
         status = scheduler.get_status()
         print(f"Scheduler running: {status['running']}")
         
-        # Run forever
+        # run forever
         await scheduler.run_forever()
         
     except KeyboardInterrupt:
@@ -118,27 +118,27 @@ def setup_config():
     
     print("\nPlease provide the following information:")
     
-    # User information
+    # user information
     user_email = input("Your email address: ").strip()
     user_name = input("Your name (optional): ").strip() or "User"
     
-    # Topics
+    # topics
     print("\nEnter topics you're interested in (comma-separated):")
     print("Examples: artificial intelligence, climate change, technology, space exploration")
     topics_input = input("Topics: ").strip()
     topics = [topic.strip() for topic in topics_input.split(",") if topic.strip()]
     
-    # Email configuration
+    # email configuration
     print("\nEmail configuration:")
     sender_email = input("Sender email (Gmail recommended): ").strip()
     print("For Gmail, use an App Password (not your regular password)")
     print("See: https://support.google.com/accounts/answer/185833")
     sender_password = input("Email app password: ").strip()
     
-    # Schedule
+    # schedule
     schedule_time = input("Daily send time (HH:MM, 24-hour format, default 08:00): ").strip() or "08:00"
     
-    # API Keys
+    # api keys
     print("\nAI API Keys (at least one required):")
     newsapi_key = input("NewsAPI key (get from https://newsapi.org/): ").strip()
     openai_key = input("OpenAI API key (optional): ").strip()
@@ -147,7 +147,7 @@ def setup_config():
     if not openai_key and not anthropic_key:
         print("Warning: No AI API keys provided. Summaries will be basic.")
     
-    # Create configuration
+    # create configuration
     config = {
         "user": {
             "email": user_email,
@@ -184,7 +184,7 @@ def setup_config():
         }
     }
     
-    # Save configuration
+    # save configuration
     import json
     config_path.parent.mkdir(parents=True, exist_ok=True)
     with open(config_path, 'w') as f:

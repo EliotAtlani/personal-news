@@ -22,6 +22,7 @@ dependencies = [
     "html2text>=2020.1.16",
     "aiohttp>=3.8.5",
     "asyncio-throttle>=1.0.2",
+    "boto3>=1.34.0",
     "google-generativeai>=0.8.5",
 ]
 

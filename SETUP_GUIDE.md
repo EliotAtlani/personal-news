@@ -65,7 +65,7 @@ This will:
 
 ### Option 1: Cron Job (Recommended)
 ```bash
-./setup_cron.sh
+./scripts/setup_cron.sh
 ```
 
 This sets up automatic daily delivery.

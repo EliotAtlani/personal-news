@@ -1,1 +1,1 @@
-# Configuration module
+# configuration module

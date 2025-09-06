@@ -174,26 +174,73 @@ class GuardianFetcher:
 class RSSFetcher:
     def __init__(self):
         self.feeds = {
+            # News Sources
             'bbc': 'http://feeds.bbci.co.uk/news/rss.xml',
             'reuters': 'http://feeds.reuters.com/reuters/topNews', 
+            
+            # Major Tech News
             'techcrunch': 'http://feeds.feedburner.com/TechCrunch',
             'ars-technica': 'http://feeds.arstechnica.com/arstechnica/index',
             'wired': 'https://www.wired.com/feed/rss',
-            'hacker-news': 'https://hnrss.org/frontpage',
-            'github-trending': 'https://mshibanami.github.io/GitHubTrendingRSS/daily/all.xml',
-            'dev-to': 'https://dev.to/feed',
-            'stackoverflow-blog': 'https://stackoverflow.blog/feed/',
             'the-verge': 'https://www.theverge.com/rss/index.xml',
             'engadget': 'https://www.engadget.com/rss.xml',
             'venturebeat': 'https://venturebeat.com/feed/',
             'techradar': 'https://www.techradar.com/rss',
             'zdnet': 'https://www.zdnet.com/news/rss.xml',
             'mit-tech-review': 'https://www.technologyreview.com/feed/',
+            
+            # Developer Communities
+            'hacker-news': 'https://hnrss.org/frontpage',
+            'github-trending': 'https://mshibanami.github.io/GitHubTrendingRSS/daily/all.xml',
+            'dev-to': 'https://dev.to/feed',
+            'stackoverflow-blog': 'https://stackoverflow.blog/feed/',
+            'freecodecamp': 'https://www.freecodecamp.org/news/rss/',
+            'product-hunt': 'https://www.producthunt.com/feed/daily',
+            
+            # Medium Publications (Tech focused)
+            'medium-programming': 'https://medium.com/feed/topic/programming',
+            'medium-software-engineering': 'https://medium.com/feed/topic/software-engineering',
+            'medium-technology': 'https://medium.com/feed/topic/technology',
+            'medium-artificial-intelligence': 'https://medium.com/feed/topic/artificial-intelligence',
+            'medium-web-development': 'https://medium.com/feed/topic/web-development',
+            'medium-data-science': 'https://medium.com/feed/topic/data-science',
+            'medium-javascript': 'https://medium.com/feed/topic/javascript',
+            'medium-python': 'https://medium.com/feed/topic/python',
+            'medium-machine-learning': 'https://medium.com/feed/topic/machine-learning',
+            'medium-startup': 'https://medium.com/feed/topic/startup',
+            
+            # Premium Medium Publications
+            'towards-data-science': 'https://towardsdatascience.com/feed',
+            'better-programming': 'https://betterprogramming.pub/feed',
+            'the-startup': 'https://medium.com/feed/swlh',
+            'hackernoon': 'https://hackernoon.com/feed',
+            'freecodecamp-medium': 'https://medium.com/feed/free-code-camp',
+            
+            # Design & Frontend
             'smashing-magazine': 'https://www.smashingmagazine.com/feed/',
             'css-tricks': 'https://css-tricks.com/feed/',
             'a-list-apart': 'https://alistapart.com/main/feed/',
-            'freecodecamp': 'https://www.freecodecamp.org/news/rss/',
-            'product-hunt': 'https://www.producthunt.com/feed/daily'
+            
+            # Additional Quality Tech Sources
+            'infoq': 'https://feed.infoq.com/',
+            'dzone': 'https://feeds.dzone.com/home',
+            'reddit-programming': 'https://www.reddit.com/r/programming/.rss',
+            'lobsters': 'https://lobste.rs/rss',
+            'indie-hackers': 'https://www.indiehackers.com/feed.xml',
+            
+            # Cloud & DevOps
+            'aws-blog': 'https://aws.amazon.com/blogs/aws/feed/',
+            'google-cloud-blog': 'https://cloud.google.com/blog/rss/',
+            'kubernetes-blog': 'https://kubernetes.io/feed.xml',
+            'docker-blog': 'https://blog.docker.com/feed/',
+            
+            # Company Engineering Blogs
+            'netflix-tech': 'https://netflixtechblog.com/feed',
+            'uber-engineering': 'https://eng.uber.com/feed/',
+            'airbnb-engineering': 'https://medium.com/feed/airbnb-engineering',
+            'dropbox-tech': 'https://dropbox.tech/feed',
+            'spotify-engineering': 'https://engineering.atspotify.com/feed/',
+            'slack-engineering': 'https://slack.engineering/feed/',
         }
 
     async def fetch_articles(self, sources: List[str] = None, from_date: datetime = None) -> List[Article]:

@@ -1,1 +1,1 @@
-# AI summarization module
+# ai summarization module
