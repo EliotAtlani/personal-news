@@ -1,0 +1,8 @@
+{
+  "hooks": {
+    "file-edit": {
+      "command": "make dev-check",
+      "description": "Run linting and formatting checks after code changes"
+    }
+  }
+}

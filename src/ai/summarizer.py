@@ -138,9 +138,7 @@ class OpenAISummarizer:
                         )
                     except ValueError:
                         importance_score = 0.5
-                elif (
-                    line.startswith(("•", "-", "*"))
-                ):
+                elif line.startswith(("•", "-", "*")):
                     if current_section == "key_points":
                         key_points.append(line.lstrip("•-* ").strip())
                 elif current_section == "key_points" and line:
@@ -239,7 +237,9 @@ class GeminiSummarizer:
     def __init__(self, api_key: str, model: str = "gemini-1.5-flash"):
         # Debug logging for API key
         if api_key:
-            logger.info(f"Gemini API key initialized: {api_key[:8]}...{api_key[-4:] if len(api_key) > 12 else api_key}")
+            logger.info(
+                f"Gemini API key initialized: {api_key[:8]}...{api_key[-4:] if len(api_key) > 12 else api_key}"
+            )
         else:
             logger.warning("Gemini API key is None/empty")
         genai.configure(api_key=api_key)
@@ -329,9 +329,7 @@ class GeminiSummarizer:
                         importance_score = max(0.0, min(1.0, importance_score))
                     except ValueError:
                         importance_score = 0.5
-                elif (
-                    line.startswith(("•", "-", "*"))
-                ):
+                elif line.startswith(("•", "-", "*")):
                     if current_section == "key_points" or not current_section:
                         key_points.append(line.lstrip("•-* ").strip())
                 elif (

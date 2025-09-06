@@ -16,8 +16,8 @@ Artificial intelligence, GenAI, machine learning, and AI research
 ## Features
 
 - **Multi-profile newsletters**: Three distinct weekly newsletters with specialized content
-- **Multi-source news aggregation**: NewsAPI, The Guardian, specialized sources per profile
-- **AI-powered summaries**: OpenAI GPT or Anthropic Claude with profile-specific prompting
+- **Multi-source news aggregation**: The Guardian API, RSS feeds, specialized sources per profile
+- **AI-powered summaries**: Google Gemini, OpenAI GPT, or Anthropic Claude with profile-specific prompting
 - **Smart filtering**: Relevance scoring, duplicate removal, and article history tracking
 - **Profile-specific templates**: Unique styling and branding for each newsletter
 - **Weekly automation**: Scheduled delivery via AWS EventBridge
@@ -64,8 +64,9 @@ Artificial intelligence, GenAI, machine learning, and AI research
 
 ### Required API Keys
 
-1. **NewsAPI**: Get free API key from [newsapi.org](https://newsapi.org)
+1. **The Guardian**: Get free API key from [open-platform.theguardian.com](https://open-platform.theguardian.com/access/)
 2. **AI Service** (choose one):
+   - **Google Gemini**: Get API key from [aistudio.google.com](https://aistudio.google.com/app/apikey) (recommended - fastest)
    - **OpenAI**: Get API key from [platform.openai.com](https://platform.openai.com)
    - **Anthropic**: Get API key from [console.anthropic.com](https://console.anthropic.com)
 
@@ -130,7 +131,14 @@ The system uses a multi-profile configuration in `config/preferences.json`:
       "sources": [
         "bbc-world",
         "reuters-world",
-        "guardian-world"
+        "guardian-world",
+        "foreign-affairs",
+        "foreign-policy",
+        "defense-news",
+        "aljazeera",
+        "nyt-world",
+        "le-monde",
+        "economist"
       ]
     },
     "ai": {
@@ -156,8 +164,8 @@ The system uses a multi-profile configuration in `config/preferences.json`:
     "sender_password": "your-app-password"
   },
   "api_keys": {
-    "newsapi": "your-newsapi-key",
-    "openai": "your-openai-key"
+    "guardian": "your-guardian-key",
+    "gemini": "your-gemini-key"
   },
   "history": {
     "sent_articles": []
@@ -170,7 +178,8 @@ The system uses a multi-profile configuration in `config/preferences.json`:
 You can also use environment variables:
 
 ```bash
-export NEWSAPI_KEY="your-newsapi-key"
+export GUARDIAN_API_KEY="your-guardian-key"
+export GEMINI_API_KEY="your-gemini-key"
 export OPENAI_API_KEY="your-openai-key"
 export ANTHROPIC_API_KEY="your-anthropic-key"
 export EMAIL_PASSWORD="your-app-password"
@@ -285,9 +294,9 @@ Each profile has its own template with unique styling:
 ### News Sources
 
 Each profile has specialized news sources:
-- **Tech**: Stack Overflow Blog, HackerNews, AWS Blog, Netflix Tech Blog
-- **Geopolitics**: BBC World, Reuters, Guardian World, Foreign Affairs
-- **AI**: MIT Tech Review, Towards Data Science, VentureBeat
+- **Tech**: Stack Overflow Blog, HackerNews, AWS Blog, Netflix Tech Blog, TechCrunch
+- **Geopolitics**: BBC World, Reuters, Guardian World, Foreign Affairs, Foreign Policy, Defense News, Al Jazeera, NY Times World, Le Monde, The Economist
+- **AI**: MIT Tech Review, Towards Data Science, VentureBeat, Medium AI publications
 
 ### Article History & Deduplication
 
@@ -307,14 +316,15 @@ The system tracks sent articles in `history.sent_articles` to prevent duplicates
    - Run `uv run python -m src.main test`
 
 2. **No articles found**:
+   - Check Guardian API key validity  
+   - Lower `min_relevance_score` in config (try 0.1)
+   - Verify RSS feeds are accessible
    - Broaden your topics
-   - Check API key validity
-   - Lower `min_relevance_score` in config
 
 3. **AI summarization failing**:
-   - Verify API keys
+   - Verify Gemini API key (preferred)
    - Check rate limits
-   - Try different AI service
+   - Try different AI service (OpenAI/Anthropic)
 
 ### Logs
 

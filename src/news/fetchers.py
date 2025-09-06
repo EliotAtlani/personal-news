@@ -1,7 +1,6 @@
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 
 import aiohttp
 import feedparser
@@ -97,7 +96,7 @@ class NewsAPIFetcher:
 
         return articles
 
-    def _parse_newsapi_article(self, data: dict, topic: str) -> Optional[Article]:
+    def _parse_newsapi_article(self, data: dict, topic: str) -> Article | None:
         """Parse NewsAPI article data into Article object."""
         try:
             published_at = datetime.fromisoformat(
@@ -122,7 +121,9 @@ class GuardianFetcher:
         self.base_url = "https://content.guardianapis.com"
         # Debug logging for API key
         if api_key:
-            logger.info(f"Guardian API key initialized: {api_key[:8]}...{api_key[-4:] if len(api_key) > 12 else api_key}")
+            logger.info(
+                f"Guardian API key initialized: {api_key[:8]}...{api_key[-4:] if len(api_key) > 12 else api_key}"
+            )
         else:
             logger.warning("Guardian API key is None/empty")
 
@@ -169,7 +170,7 @@ class GuardianFetcher:
 
         return articles
 
-    def _parse_guardian_article(self, data: dict) -> Optional[Article]:
+    def _parse_guardian_article(self, data: dict) -> Article | None:
         """Parse Guardian article data into Article object."""
         try:
             published_at = datetime.fromisoformat(
@@ -295,7 +296,7 @@ class RSSFetcher:
 
     def _parse_rss_entry(
         self, entry, source: str, from_date: datetime
-    ) -> Optional[Article]:
+    ) -> Article | None:
         """Parse RSS entry into Article object."""
         try:
             # Parse publication date
@@ -384,7 +385,7 @@ class EventRegistryFetcher:
 
         return articles
 
-    def _parse_eventregistry_article(self, data: dict, topic: str) -> Optional[Article]:
+    def _parse_eventregistry_article(self, data: dict, topic: str) -> Article | None:
         """Parse Event Registry article data into Article object."""
         try:
             # Event Registry article structure
@@ -457,35 +458,38 @@ class NewsFetcher:
             logger.error(f"Error in concurrent news fetching: {e}")
 
         # Limit articles per source to max 3
-        limited_articles = self._limit_articles_per_source(all_articles, max_per_source=3)
-        
+        limited_articles = self._limit_articles_per_source(
+            all_articles, max_per_source=3
+        )
+
         return limited_articles
-    
-    def _limit_articles_per_source(self, articles: list[Article], max_per_source: int = 3) -> list[Article]:
+
+    def _limit_articles_per_source(
+        self, articles: list[Article], max_per_source: int = 3
+    ) -> list[Article]:
         """Limit the number of articles per source to avoid overwhelming from one source."""
         source_counts = {}
         limited_articles = []
-        
+
         # Sort articles by published date (newest first) to get best articles from each source
         # Handle both timezone-aware and timezone-naive datetimes
         def get_sort_key(article):
             dt = article.published_at
             if dt.tzinfo is None:
                 # Make naive datetime timezone-aware (assume UTC)
-                from datetime import timezone
-                dt = dt.replace(tzinfo=timezone.utc)
+                dt = dt.replace(tzinfo=UTC)
             return dt
-        
+
         sorted_articles = sorted(articles, key=get_sort_key, reverse=True)
-        
+
         for article in sorted_articles:
             source_count = source_counts.get(article.source, 0)
             if source_count < max_per_source:
                 limited_articles.append(article)
                 source_counts[article.source] = source_count + 1
-        
+
         logger.info(f"Limited articles: {len(articles)} -> {len(limited_articles)}")
         for source, count in source_counts.items():
             logger.info(f"  {source}: {count} articles")
-            
+
         return limited_articles

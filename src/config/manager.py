@@ -1,7 +1,6 @@
 import json
 import os
 from pathlib import Path
-from typing import Union, Optional
 
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
@@ -84,7 +83,7 @@ class ProfileBasedConfig(BaseModel):
 
 
 class ConfigManager:
-    def __init__(self, config_path: Optional[str] = None, use_s3: Optional[bool] = None):
+    def __init__(self, config_path: str | None = None, use_s3: bool | None = None):
         """
         Initialize ConfigManager with support for both local and S3 storage.
 
@@ -131,15 +130,21 @@ class ConfigManager:
                 try:
                     secrets_manager = SecretsManager()
                     api_keys = secrets_manager.get_api_keys()
-                    
+
                     for key, value in api_keys.items():
-                        if key in ["GUARDIAN_API_KEY", "GEMINI_API_KEY", "NEWSAPI_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY"]:
+                        if key in [
+                            "GUARDIAN_API_KEY",
+                            "GEMINI_API_KEY",
+                            "NEWSAPI_KEY",
+                            "OPENAI_API_KEY",
+                            "ANTHROPIC_API_KEY",
+                        ]:
                             # Map environment variable names to config keys
                             config_key = key.lower().replace("_api_key", "")
                             if config_key == "newsapi":
                                 config_key = "newsapi"
                             config_data["api_keys"][config_key] = value
-                    
+
                 except Exception as e:
                     print(f"WARNING: Could not load from Secrets Manager: {e}")
                     print("Falling back to environment variables...")
@@ -190,7 +195,7 @@ class ConfigManager:
             self.config.topics.remove(topic)
             self.save_config()
 
-    def update_schedule(self, time: Optional[str] = None, enabled: Optional[bool] = None):
+    def update_schedule(self, time: str | None = None, enabled: bool | None = None):
         """Update schedule settings."""
         if time:
             self.config.schedule.time = time
@@ -198,7 +203,7 @@ class ConfigManager:
             self.config.schedule.enabled = enabled
         self.save_config()
 
-    def get_config(self, profile: Optional[str] = None) -> ProfileBasedConfig:
+    def get_config(self, profile: str | None = None) -> ProfileBasedConfig:
         """Get configuration for a specific profile."""
         if profile is None:
             # Return first available profile if none specified
