@@ -237,6 +237,11 @@ class AnthropicSummarizer:
 
 class GeminiSummarizer:
     def __init__(self, api_key: str, model: str = "gemini-1.5-flash"):
+        # Debug logging for API key
+        if api_key:
+            logger.info(f"Gemini API key initialized: {api_key[:8]}...{api_key[-4:] if len(api_key) > 12 else api_key}")
+        else:
+            logger.warning("Gemini API key is None/empty")
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel(model)
 

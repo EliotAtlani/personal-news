@@ -1,11 +1,13 @@
 import json
 import os
 from pathlib import Path
+from typing import Union, Optional
 
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
 from .s3_storage import S3PreferencesManager
+from .secrets import SecretsManager
 
 load_dotenv()
 
@@ -33,8 +35,8 @@ class ProfileConfig(BaseModel):
     name: str
     subject_prefix: str
     schedule: ScheduleConfig
-    topics: list[str] = Field(default_factory=list)
-    sources: list[str] = Field(default_factory=list)
+    topics: list = Field(default_factory=list)
+    sources: list = Field(default_factory=list)
     content: ContentConfig = Field(default_factory=ContentConfig)
 
 
@@ -55,12 +57,12 @@ class APIKeys(BaseModel):
 
 
 class HistoryConfig(BaseModel):
-    sent_articles: list[str] = Field(default_factory=list)
+    sent_articles: list = Field(default_factory=list)
 
 
 class Config(BaseModel):
     user: UserConfig
-    profiles: dict[str, ProfileConfig]
+    profiles: dict
     email: EmailConfig
     api_keys: APIKeys
     history: HistoryConfig = Field(default_factory=HistoryConfig)
@@ -72,8 +74,8 @@ class ProfileBasedConfig(BaseModel):
     user: UserConfig
     name: str
     subject_prefix: str
-    topics: list[str]
-    sources: list[str]
+    topics: list
+    sources: list
     schedule: ScheduleConfig
     content: ContentConfig
     email: EmailConfig
@@ -82,7 +84,7 @@ class ProfileBasedConfig(BaseModel):
 
 
 class ConfigManager:
-    def __init__(self, config_path: str = None, use_s3: bool = None):
+    def __init__(self, config_path: Optional[str] = None, use_s3: Optional[bool] = None):
         """
         Initialize ConfigManager with support for both local and S3 storage.
 
@@ -116,7 +118,7 @@ class ConfigManager:
         self.config = self._load_config()
 
     def _load_config(self) -> Config:
-        """Load configuration from S3 or local file and environment variables."""
+        """Load configuration from S3 or local file, then override with Secrets Manager and environment variables."""
         try:
             if self.use_s3:
                 config_data = self.s3_manager.load_preferences()
@@ -124,7 +126,25 @@ class ConfigManager:
                 with open(self.config_path) as f:
                     config_data = json.load(f)
 
-            # Override with environment variables if they exist
+            # Override with AWS Secrets Manager if available (production)
+            if self.use_s3:  # Only use Secrets Manager in production
+                try:
+                    secrets_manager = SecretsManager()
+                    api_keys = secrets_manager.get_api_keys()
+                    
+                    for key, value in api_keys.items():
+                        if key in ["GUARDIAN_API_KEY", "GEMINI_API_KEY", "NEWSAPI_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY"]:
+                            # Map environment variable names to config keys
+                            config_key = key.lower().replace("_api_key", "")
+                            if config_key == "newsapi":
+                                config_key = "newsapi"
+                            config_data["api_keys"][config_key] = value
+                    
+                except Exception as e:
+                    print(f"WARNING: Could not load from Secrets Manager: {e}")
+                    print("Falling back to environment variables...")
+
+            # Override with environment variables if they exist (local development)
             if os.getenv("NEWSAPI_KEY"):
                 config_data["api_keys"]["newsapi"] = os.getenv("NEWSAPI_KEY")
             if os.getenv("GUARDIAN_API_KEY"):
@@ -170,7 +190,7 @@ class ConfigManager:
             self.config.topics.remove(topic)
             self.save_config()
 
-    def update_schedule(self, time: str = None, enabled: bool = None):
+    def update_schedule(self, time: Optional[str] = None, enabled: Optional[bool] = None):
         """Update schedule settings."""
         if time:
             self.config.schedule.time = time
@@ -178,7 +198,7 @@ class ConfigManager:
             self.config.schedule.enabled = enabled
         self.save_config()
 
-    def get_config(self, profile: str | None = None) -> ProfileBasedConfig:
+    def get_config(self, profile: Optional[str] = None) -> ProfileBasedConfig:
         """Get configuration for a specific profile."""
         if profile is None:
             # Return first available profile if none specified
@@ -191,18 +211,33 @@ class ConfigManager:
 
         profile_config = self.config.profiles[profile]
 
-        return ProfileBasedConfig(
-            user=self.config.user,
-            name=profile_config.name,
-            subject_prefix=profile_config.subject_prefix,
-            topics=profile_config.topics,
-            sources=profile_config.sources,
-            schedule=profile_config.schedule,
-            content=profile_config.content,
-            email=self.config.email,
-            api_keys=self.config.api_keys,
-            history=self.config.history,
-        )
+        # Handle both dict and ProfileConfig object cases
+        if isinstance(profile_config, dict):
+            return ProfileBasedConfig(
+                user=self.config.user,
+                name=profile_config["name"],
+                subject_prefix=profile_config["subject_prefix"],
+                topics=profile_config["topics"],
+                sources=profile_config["sources"],
+                schedule=profile_config["schedule"],
+                content=profile_config["content"],
+                email=self.config.email,
+                api_keys=self.config.api_keys,
+                history=self.config.history,
+            )
+        else:
+            return ProfileBasedConfig(
+                user=self.config.user,
+                name=profile_config.name,
+                subject_prefix=profile_config.subject_prefix,
+                topics=profile_config.topics,
+                sources=profile_config.sources,
+                schedule=profile_config.schedule,
+                content=profile_config.content,
+                email=self.config.email,
+                api_keys=self.config.api_keys,
+                history=self.config.history,
+            )
 
     def get_full_config(self) -> Config:
         """Get the full multi-profile configuration."""

@@ -97,7 +97,11 @@ echo "✅ Image found in ECR"
 # Function to update task definition for a profile
 update_task_definition() {
     local profile=$1
-    local task_def_name="personal-news-${profile}-prod"
+    # Map full profile names to shortened task definition names
+    case "$profile" in
+        "geopolitics") task_def_name="personal-news-geo-prod" ;;
+        *) task_def_name="personal-news-${profile}-prod" ;;
+    esac
     local container_name="personal-news-${profile}-container"
     
     echo ""
@@ -135,7 +139,11 @@ update_task_definition() {
 # Function to run task for a profile
 run_task_for_profile() {
     local profile=$1
-    local task_def_name="personal-news-${profile}-prod"
+    # Map full profile names to shortened task definition names
+    case "$profile" in
+        "geopolitics") task_def_name="personal-news-geo-prod" ;;
+        *) task_def_name="personal-news-${profile}-prod" ;;
+    esac
     
     echo ""
     echo "🚀 Running ECS task for $profile profile..."
@@ -167,7 +175,8 @@ run_task_for_profile() {
     echo "📊 $profile Task Status: $TASK_STATUS"
     
     # Store task ARN for later reference
-    eval "${profile^^}_TASK_ARN=$TASK_ARN"
+    profile_upper=$(echo "$profile" | tr '[:lower:]' '[:upper:]')
+    eval "${profile_upper}_TASK_ARN=$TASK_ARN"
 }
 
 # Update task definitions for all selected profiles
@@ -198,7 +207,8 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     
     # Show logs for each profile
     for profile in "${PROFILES[@]}"; do
-        task_var="${profile^^}_TASK_ARN"
+        profile_upper=$(echo "$profile" | tr '[:lower:]' '[:upper:]')
+        task_var="${profile_upper}_TASK_ARN"
         task_arn=${!task_var}
         
         if [ -n "$task_arn" ]; then
@@ -224,7 +234,11 @@ else
     echo ""
     echo "To run tasks manually:"
     for profile in "${PROFILES[@]}"; do
-        echo "  $profile: aws ecs run-task --cluster $ECS_CLUSTER --task-definition personal-news-${profile}-prod --launch-type FARGATE --network-configuration 'awsvpcConfiguration={subnets=[$SUBNET_ID],securityGroups=[$SECURITY_GROUP_ID],assignPublicIp=ENABLED}'"
+        case "$profile" in
+            "geopolitics") task_def="personal-news-geo-prod" ;;
+            *) task_def="personal-news-${profile}-prod" ;;
+        esac
+        echo "  $profile: aws ecs run-task --cluster $ECS_CLUSTER --task-definition $task_def --launch-type FARGATE --network-configuration 'awsvpcConfiguration={subnets=[$SUBNET_ID],securityGroups=[$SECURITY_GROUP_ID],assignPublicIp=ENABLED}'"
     done
 fi
 

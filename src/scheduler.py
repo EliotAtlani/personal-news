@@ -3,6 +3,7 @@ import logging
 import signal
 import sys
 from datetime import datetime, timedelta
+from typing import Optional
 
 from apscheduler.executors.asyncio import AsyncIOExecutor
 from apscheduler.jobstores.memory import MemoryJobStore
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class NewsScheduler:
-    def __init__(self, config_path: str | None = None):
+    def __init__(self, config_path: Optional[str] = None):
         self.config_manager = ConfigManager(config_path)
         self.config = self.config_manager.get_config()
 

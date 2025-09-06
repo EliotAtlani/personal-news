@@ -160,28 +160,28 @@ aws.secretsmanager.SecretVersion(
     secret_string="PLACEHOLDER_NEWSAPI_KEY"
 )
 
-openai_secret = aws.secretsmanager.Secret(
-    "openai-secret",
-    name=f"{project_name}/openai-key-{environment}",
-    description="OpenAI API key for Personal News Digest"
+guardian_secret = aws.secretsmanager.Secret(
+    "guardian-secret",
+    name=f"{project_name}/guardian-key-{environment}",
+    description="Guardian API key for Personal News Digest"
 )
 
 aws.secretsmanager.SecretVersion(
-    "openai-secret-version",
-    secret_id=openai_secret.id,
-    secret_string="PLACEHOLDER_OPENAI_KEY"
+    "guardian-secret-version",
+    secret_id=guardian_secret.id,
+    secret_string="PLACEHOLDER_GUARDIAN_KEY"
 )
 
-anthropic_secret = aws.secretsmanager.Secret(
-    "anthropic-secret",
-    name=f"{project_name}/anthropic-key-{environment}",
-    description="Anthropic API key for Personal News Digest"
+gemini_secret = aws.secretsmanager.Secret(
+    "gemini-secret",
+    name=f"{project_name}/gemini-key-{environment}",
+    description="Gemini API key for Personal News Digest"
 )
 
 aws.secretsmanager.SecretVersion(
-    "anthropic-secret-version",
-    secret_id=anthropic_secret.id,
-    secret_string="PLACEHOLDER_ANTHROPIC_KEY"
+    "gemini-secret-version",
+    secret_id=gemini_secret.id,
+    secret_string="PLACEHOLDER_GEMINI_KEY"
 )
 
 email_password_secret = aws.secretsmanager.Secret(
@@ -232,8 +232,8 @@ secrets_policy = aws.iam.RolePolicy(
     role=task_execution_role.id,
     policy=pulumi.Output.all(
         newsapi_secret.arn,
-        openai_secret.arn,
-        anthropic_secret.arn,
+        guardian_secret.arn,
+        gemini_secret.arn,
         email_password_secret.arn
     ).apply(lambda arns: json.dumps({
         "Version": "2012-10-17",
@@ -372,8 +372,8 @@ tech_task_definition = aws.ecs.TaskDefinition(
         log_group.name,
         preferences_bucket.bucket,
         newsapi_secret.arn,
-        openai_secret.arn,
-        anthropic_secret.arn,
+        guardian_secret.arn,
+        gemini_secret.arn,
         email_password_secret.arn
     ).apply(lambda args: json.dumps([{
         "name": f"{project_name}-tech-container",
@@ -395,8 +395,8 @@ tech_task_definition = aws.ecs.TaskDefinition(
         ],
         "secrets": [
             {"name": "NEWSAPI_KEY", "valueFrom": args[3]},
-            {"name": "OPENAI_API_KEY", "valueFrom": args[4]},
-            {"name": "ANTHROPIC_API_KEY", "valueFrom": args[5]},
+            {"name": "GUARDIAN_API_KEY", "valueFrom": args[4]},
+            {"name": "GEMINI_API_KEY", "valueFrom": args[5]},
             {"name": "EMAIL_PASSWORD", "valueFrom": args[6]}
         ]
     }]))
@@ -441,8 +441,8 @@ geo_task_definition = aws.ecs.TaskDefinition(
         log_group.name,
         preferences_bucket.bucket,
         newsapi_secret.arn,
-        openai_secret.arn,
-        anthropic_secret.arn,
+        guardian_secret.arn,
+        gemini_secret.arn,
         email_password_secret.arn
     ).apply(lambda args: json.dumps([{
         "name": f"{project_name}-geo-container",
@@ -464,8 +464,8 @@ geo_task_definition = aws.ecs.TaskDefinition(
         ],
         "secrets": [
             {"name": "NEWSAPI_KEY", "valueFrom": args[3]},
-            {"name": "OPENAI_API_KEY", "valueFrom": args[4]},
-            {"name": "ANTHROPIC_API_KEY", "valueFrom": args[5]},
+            {"name": "GUARDIAN_API_KEY", "valueFrom": args[4]},
+            {"name": "GEMINI_API_KEY", "valueFrom": args[5]},
             {"name": "EMAIL_PASSWORD", "valueFrom": args[6]}
         ]
     }]))
@@ -510,8 +510,8 @@ ai_task_definition = aws.ecs.TaskDefinition(
         log_group.name,
         preferences_bucket.bucket,
         newsapi_secret.arn,
-        openai_secret.arn,
-        anthropic_secret.arn,
+        guardian_secret.arn,
+        gemini_secret.arn,
         email_password_secret.arn
     ).apply(lambda args: json.dumps([{
         "name": f"{project_name}-ai-container",
@@ -533,8 +533,8 @@ ai_task_definition = aws.ecs.TaskDefinition(
         ],
         "secrets": [
             {"name": "NEWSAPI_KEY", "valueFrom": args[3]},
-            {"name": "OPENAI_API_KEY", "valueFrom": args[4]},
-            {"name": "ANTHROPIC_API_KEY", "valueFrom": args[5]},
+            {"name": "GUARDIAN_API_KEY", "valueFrom": args[4]},
+            {"name": "GEMINI_API_KEY", "valueFrom": args[5]},
             {"name": "EMAIL_PASSWORD", "valueFrom": args[6]}
         ]
     }]))
