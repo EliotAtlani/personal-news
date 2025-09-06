@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ newsletter_title }}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #007ACC 0%, #4A90E2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        
+        .content {
+            padding: 20px;
+        }
+        
+        .summary-section {
+            background-color: #f0f8ff;
+            border-left: 4px solid #007ACC;
+            padding: 15px 20px;
+            margin-bottom: 30px;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .summary-section h2 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 18px;
+        }
+        
+        .summary-text {
+            color: #333;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .insufficient-notice {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #856404;
+        }
+        
+        .category-section {
+            margin-bottom: 40px;
+            clear: both;
+            overflow: hidden;
+        }
+        
+        .category-section::after {
+            content: '';
+            display: block;
+            clear: both;
+            height: 0;
+        }
+        
+        .category-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+            margin: 0 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #007ACC;
+        }
+        
+        .article-card {
+            background-color: #fff;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            transition: box-shadow 0.2s ease;
+            display: block;
+            overflow: hidden;
+            clear: both;
+            position: relative;
+            isolation: isolate;
+        }
+        
+        .article-card:hover {
+            box-shadow: 0 2px 8px rgba(0,122,204,0.1);
+        }
+        
+        .article-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 10px 0;
+            line-height: 1.4;
+        }
+        
+        .article-title a {
+            color: #333;
+            text-decoration: none;
+        }
+        
+        .article-title a:hover {
+            color: #007ACC;
+        }
+        
+        .article-meta {
+            font-size: 12px;
+            color: #555;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .source {
+            font-weight: 500;
+        }
+        
+        .importance-score {
+            background-color: #007ACC;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+        }
+        
+        .article-summary {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        
+        .key-points {
+            background-color: #f0f8ff;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .key-points h4 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #444;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .key-points ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+        
+        .key-points li {
+            font-size: 13px;
+            color: #444;
+            margin-bottom: 5px;
+        }
+        
+        .read-more {
+            display: inline-block;
+            color: #007ACC;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
+        .read-more:hover {
+            text-decoration: underline;
+        }
+        
+        .footer {
+            background-color: #f0f8ff;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #007ACC;
+        }
+        
+        .footer p {
+            margin: 5px 0;
+            font-size: 12px;
+            color: #555;
+        }
+        
+        .footer a {
+            color: #007ACC;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .no-articles {
+            text-align: center;
+            padding: 40px;
+            color: #444;
+        }
+        
+        .no-articles h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                margin: 0;
+                box-shadow: none;
+            }
+            
+            .header {
+                padding: 20px 15px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .content {
+                padding: 15px;
+            }
+            
+            .article-card {
+                padding: 15px;
+            }
+            
+            .article-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{ newsletter_title }}</h1>
+            <p>{{ current_date }} • {{ total_articles }} articles</p>
+            <p>🚀 Your weekly dose of tech & engineering insights</p>
+        </div>
+        
+        <div class="content">
+            {% if insufficient_articles %}
+            <div class="insufficient-notice">
+                <strong>Note:</strong> We found {{ total_articles }} article{{ 's' if total_articles != 1 else '' }} this week, fewer than our typical goal of {{ min_articles }}+. This covers everything available that matched your tech interests.
+            </div>
+            {% endif %}
+
+            {% if summary %}
+            <div class="summary-section">
+                <h2>This Week's Tech Highlights</h2>
+                <p class="summary-text">{{ summary }}</p>
+            </div>
+            {% endif %}
+            
+            {% if categories %}
+                {% for category, articles in categories.items() %}
+                <div class="category-section">
+                    <h2 class="category-title">{{ category }}</h2>
+                    
+                    {% for summary in articles %}
+                    <div class="article-card">
+                        <h3 class="article-title">
+                            <a href="{{ summary.article.url }}" target="_blank">{{ summary.article.title }}</a>
+                        </h3>
+                        
+                        <div class="article-meta">
+                            <span class="source">{{ summary.article.source }}</span>
+                            <span class="importance-score">{{ "%.1f"|format(summary.importance_score) }}</span>
+                        </div>
+                        
+                        <div class="article-summary">
+                            {{ summary.brief_summary }}
+                        </div>
+                        
+                        {% if summary.key_points %}
+                        <div class="key-points">
+                            <h4>Key Points</h4>
+                            <ul>
+                                {% for point in summary.key_points %}
+                                <li>{{ point }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                        
+                        <a href="{{ summary.article.url }}" class="read-more" target="_blank">Read full article →</a>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="no-articles">
+                <h3>No tech articles found this week</h3>
+                <p>We couldn't find any articles matching your tech interests this week. The sources may have been light on relevant content.</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="footer">
+            <p><strong>Tech Weekly - Personal News Digest</strong></p>
+            <p>Your curated selection of software engineering, programming, and tech industry news</p>
+            <p>Generated on {{ current_date }} with AI-powered summarization</p>
+            <p>
+                <a href="mailto:{{ user_email }}?subject=Update Newsletter Preferences">Update Preferences</a> | 
+                <a href="mailto:{{ user_email }}?subject=Unsubscribe">Unsubscribe</a>
+            </p>
+            <p>This newsletter was automatically generated. Please don't reply to this email.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -24,15 +24,16 @@ dependencies = [
     "asyncio-throttle>=1.0.2",
     "boto3>=1.34.0",
     "google-generativeai>=0.8.5",
+    "pulumi>=3.193.0",
+    "pulumi-aws>=7.7.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0.0",
     "pytest-asyncio>=0.21.0",
-    "black>=23.0.0",
-    "isort>=5.12.0",
-    "flake8>=6.0.0",
+    "black>=25.1.0",
+    "ruff>=0.12.12",
 ]
 
 [project.scripts]
@@ -42,13 +43,31 @@ personal-news = "src.main:main"
 packages = ["src"]
 
 [tool.black]
-line-length = 100
-target-version = ['py39']
+line-length = 88
+target-version = ['py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+  | logs
+  | __pycache__
+)/
+'''
 
-[tool.isort]
-profile = "black"
-line_length = 100
+[tool.ruff]
+# Main ruff configuration is in ruff.toml
+line-length = 88
+target-version = "py311"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+

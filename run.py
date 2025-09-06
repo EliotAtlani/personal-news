@@ -142,7 +142,16 @@ elif len(sys.argv) > 1 and sys.argv[1] == "test":
         print(f"✗ Error: {e}")
 
 elif len(sys.argv) > 1 and sys.argv[1] == "run":
-    print("\nRunning news digest generation...")
+    # Check for profile argument
+    profile = None
+    if len(sys.argv) > 2:
+        if sys.argv[2] == "--profile" and len(sys.argv) > 3:
+            profile = sys.argv[3]
+    
+    if not profile:
+        profile = os.environ.get('NEWSLETTER_PROFILE', 'tech')
+    
+    print(f"\nRunning {profile} newsletter generation...")
     import asyncio
 
     async def run_digest():
@@ -155,10 +164,10 @@ elif len(sys.argv) > 1 and sys.argv[1] == "run":
             from datetime import datetime, timedelta
 
             config_manager = ConfigManager()
-            config = config_manager.get_config()
+            config = config_manager.get_config(profile=profile)
 
-            # Fetch news
-            print("Fetching news...")
+            # Fetch news for last week
+            print("Fetching news for last week...")
             news_fetcher = NewsFetcher(
                 newsapi_key=getattr(config.api_keys, 'newsapi', None),
                 guardian_key=getattr(config.api_keys, 'guardian', None),
@@ -166,10 +175,13 @@ elif len(sys.argv) > 1 and sys.argv[1] == "run":
                     config.api_keys, 'eventregistry', None)
             )
 
+            # Get last week's news based on profile schedule
+            from_date = datetime.now() - timedelta(days=7)
+            
             articles = await news_fetcher.fetch_all_articles(
                 topics=config.topics,
                 sources=config.sources,
-                from_date=datetime.now() - timedelta(days=1)
+                from_date=from_date
             )
 
             print(f"Found {len(articles)} articles")
@@ -184,9 +196,9 @@ elif len(sys.argv) > 1 and sys.argv[1] == "run":
 
             print(f"Filtered to {len(filtered_articles)} articles")
 
-            if not filtered_articles:
-                print("No relevant articles found")
-                return
+            if len(filtered_articles) < config.content.min_articles:
+                print(f"Only {len(filtered_articles)} articles found (minimum {config.content.min_articles})")
+                print("Will send with available articles and explanation")
 
             # Generate AI summaries
             print("Generating summaries...")
@@ -238,7 +250,7 @@ elif len(sys.argv) > 1 and sys.argv[1] == "run":
             # Send email
             print("Sending newsletter...")
             email_sender = EmailSender(config)
-            success = email_sender.send_newsletter(summaries, categories)
+            success = email_sender.send_newsletter(summaries, categories, profile=profile)
 
             if success:
                 print("✓ Newsletter sent successfully!")
@@ -257,3 +269,6 @@ else:
     print("  setup - Interactive configuration setup")
     print("  test  - Test email configuration")
     print("  run   - Generate and send newsletter once")
+    print("  run --profile tech        - Generate tech newsletter")
+    print("  run --profile geopolitics - Generate geopolitics newsletter")
+    print("  run --profile ai          - Generate AI newsletter")

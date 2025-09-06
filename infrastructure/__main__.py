@@ -1,6 +1,7 @@
+import json
+
 import pulumi
 import pulumi_aws as aws
-import json
 
 # Configuration
 config = pulumi.Config()
@@ -331,49 +332,6 @@ cluster_capacity_providers = aws.ecs.ClusterCapacityProviders(
     )]
 )
 
-# ECS Task Definition (will be updated with actual image later)
-task_definition = aws.ecs.TaskDefinition(
-    "task-definition",
-    family=f"{project_name}-{environment}",
-    network_mode="awsvpc",
-    requires_compatibilities=["FARGATE"],
-    cpu="256",
-    memory="512",
-    execution_role_arn=task_execution_role.arn,
-    task_role_arn=task_role.arn,
-    container_definitions=pulumi.Output.all(
-        ecr_repository.repository_url,
-        log_group.name,
-        preferences_bucket.bucket,
-        newsapi_secret.arn,
-        openai_secret.arn,
-        anthropic_secret.arn,
-        email_password_secret.arn
-    ).apply(lambda args: json.dumps([{
-        "name": f"{project_name}-container",
-        "image": f"{args[0]}:latest",
-        "essential": True,
-        "logConfiguration": {
-            "logDriver": "awslogs",
-            "options": {
-                "awslogs-group": args[1],
-                "awslogs-region": region,
-                "awslogs-stream-prefix": "ecs"
-            }
-        },
-        "environment": [
-            {"name": "AWS_USE_S3", "value": "true"},
-            {"name": "S3_BUCKET_NAME", "value": args[2]},
-            {"name": "AWS_DEFAULT_REGION", "value": region}
-        ],
-        "secrets": [
-            {"name": "NEWSAPI_KEY", "valueFrom": args[3]},
-            {"name": "OPENAI_API_KEY", "valueFrom": args[4]},
-            {"name": "ANTHROPIC_API_KEY", "valueFrom": args[5]},
-            {"name": "EMAIL_PASSWORD", "valueFrom": args[6]}
-        ]
-    }]))
-)
 
 # IAM Role for EventBridge
 eventbridge_role = aws.iam.Role(
@@ -391,48 +349,66 @@ eventbridge_role = aws.iam.Role(
     })
 )
 
-# EventBridge policy
-eventbridge_policy = aws.iam.RolePolicy(
-    "eventbridge-policy",
-    role=eventbridge_role.id,
-    policy=pulumi.Output.all(
-        task_definition.arn,
-        task_execution_role.arn,
-        task_role.arn
-    ).apply(lambda arns: json.dumps({
-        "Version": "2012-10-17",
-        "Statement": [
-            {
-                "Effect": "Allow",
-                "Action": ["ecs:RunTask"],
-                "Resource": arns[0]
-            },
-            {
-                "Effect": "Allow",
-                "Action": ["iam:PassRole"],
-                "Resource": [arns[1], arns[2]]
-            }
-        ]
-    }))
-)
-
-# EventBridge Rule for Scheduling
-schedule_rule = aws.cloudwatch.EventRule(
-    "schedule-rule",
-    name=f"{project_name}-schedule-{environment}",
-    description="Daily trigger for Personal News Digest",
-    schedule_expression=schedule_time,
+# Tech Newsletter - Monday 12:00 UTC
+tech_schedule_rule = aws.cloudwatch.EventRule(
+    "tech-schedule-rule",
+    name=f"{project_name}-tech-schedule-{environment}",
+    description="Monday trigger for Tech Newsletter",
+    schedule_expression="cron(0 12 ? * MON *)",
     state="ENABLED"
 )
 
-# EventBridge Target
-schedule_target = aws.cloudwatch.EventTarget(
-    "schedule-target",
-    rule=schedule_rule.name,
+tech_task_definition = aws.ecs.TaskDefinition(
+    "tech-task-definition",
+    family=f"{project_name}-tech-{environment}",
+    network_mode="awsvpc",
+    requires_compatibilities=["FARGATE"],
+    cpu="256",
+    memory="512",
+    execution_role_arn=task_execution_role.arn,
+    task_role_arn=task_role.arn,
+    container_definitions=pulumi.Output.all(
+        ecr_repository.repository_url,
+        log_group.name,
+        preferences_bucket.bucket,
+        newsapi_secret.arn,
+        openai_secret.arn,
+        anthropic_secret.arn,
+        email_password_secret.arn
+    ).apply(lambda args: json.dumps([{
+        "name": f"{project_name}-tech-container",
+        "image": f"{args[0]}:latest",
+        "essential": True,
+        "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+                "awslogs-group": args[1],
+                "awslogs-region": region,
+                "awslogs-stream-prefix": "ecs-tech"
+            }
+        },
+        "environment": [
+            {"name": "AWS_USE_S3", "value": "true"},
+            {"name": "S3_BUCKET_NAME", "value": args[2]},
+            {"name": "AWS_DEFAULT_REGION", "value": region},
+            {"name": "NEWSLETTER_PROFILE", "value": "tech"}
+        ],
+        "secrets": [
+            {"name": "NEWSAPI_KEY", "valueFrom": args[3]},
+            {"name": "OPENAI_API_KEY", "valueFrom": args[4]},
+            {"name": "ANTHROPIC_API_KEY", "valueFrom": args[5]},
+            {"name": "EMAIL_PASSWORD", "valueFrom": args[6]}
+        ]
+    }]))
+)
+
+tech_schedule_target = aws.cloudwatch.EventTarget(
+    "tech-schedule-target",
+    rule=tech_schedule_rule.name,
     arn=ecs_cluster.arn,
     role_arn=eventbridge_role.arn,
     ecs_target=aws.cloudwatch.EventTargetEcsTargetArgs(
-        task_definition_arn=task_definition.arn,
+        task_definition_arn=tech_task_definition.arn,
         launch_type="FARGATE",
         network_configuration=aws.cloudwatch.EventTargetEcsTargetNetworkConfigurationArgs(
             security_groups=[security_group.id],
@@ -442,10 +418,177 @@ schedule_target = aws.cloudwatch.EventTarget(
     )
 )
 
+# Geopolitics Newsletter - Wednesday 12:00 UTC
+geo_schedule_rule = aws.cloudwatch.EventRule(
+    "geo-schedule-rule",
+    name=f"{project_name}-geo-schedule-{environment}",
+    description="Wednesday trigger for Geopolitics Newsletter",
+    schedule_expression="cron(0 12 ? * WED *)",
+    state="ENABLED"
+)
+
+geo_task_definition = aws.ecs.TaskDefinition(
+    "geo-task-definition",
+    family=f"{project_name}-geo-{environment}",
+    network_mode="awsvpc",
+    requires_compatibilities=["FARGATE"],
+    cpu="256",
+    memory="512",
+    execution_role_arn=task_execution_role.arn,
+    task_role_arn=task_role.arn,
+    container_definitions=pulumi.Output.all(
+        ecr_repository.repository_url,
+        log_group.name,
+        preferences_bucket.bucket,
+        newsapi_secret.arn,
+        openai_secret.arn,
+        anthropic_secret.arn,
+        email_password_secret.arn
+    ).apply(lambda args: json.dumps([{
+        "name": f"{project_name}-geo-container",
+        "image": f"{args[0]}:latest",
+        "essential": True,
+        "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+                "awslogs-group": args[1],
+                "awslogs-region": region,
+                "awslogs-stream-prefix": "ecs-geo"
+            }
+        },
+        "environment": [
+            {"name": "AWS_USE_S3", "value": "true"},
+            {"name": "S3_BUCKET_NAME", "value": args[2]},
+            {"name": "AWS_DEFAULT_REGION", "value": region},
+            {"name": "NEWSLETTER_PROFILE", "value": "geopolitics"}
+        ],
+        "secrets": [
+            {"name": "NEWSAPI_KEY", "valueFrom": args[3]},
+            {"name": "OPENAI_API_KEY", "valueFrom": args[4]},
+            {"name": "ANTHROPIC_API_KEY", "valueFrom": args[5]},
+            {"name": "EMAIL_PASSWORD", "valueFrom": args[6]}
+        ]
+    }]))
+)
+
+geo_schedule_target = aws.cloudwatch.EventTarget(
+    "geo-schedule-target",
+    rule=geo_schedule_rule.name,
+    arn=ecs_cluster.arn,
+    role_arn=eventbridge_role.arn,
+    ecs_target=aws.cloudwatch.EventTargetEcsTargetArgs(
+        task_definition_arn=geo_task_definition.arn,
+        launch_type="FARGATE",
+        network_configuration=aws.cloudwatch.EventTargetEcsTargetNetworkConfigurationArgs(
+            security_groups=[security_group.id],
+            subnets=[public_subnet_1.id, public_subnet_2.id],
+            assign_public_ip=True
+        )
+    )
+)
+
+# AI Newsletter - Friday 12:00 UTC
+ai_schedule_rule = aws.cloudwatch.EventRule(
+    "ai-schedule-rule",
+    name=f"{project_name}-ai-schedule-{environment}",
+    description="Friday trigger for AI Newsletter",
+    schedule_expression="cron(0 12 ? * FRI *)",
+    state="ENABLED"
+)
+
+ai_task_definition = aws.ecs.TaskDefinition(
+    "ai-task-definition",
+    family=f"{project_name}-ai-{environment}",
+    network_mode="awsvpc",
+    requires_compatibilities=["FARGATE"],
+    cpu="256",
+    memory="512",
+    execution_role_arn=task_execution_role.arn,
+    task_role_arn=task_role.arn,
+    container_definitions=pulumi.Output.all(
+        ecr_repository.repository_url,
+        log_group.name,
+        preferences_bucket.bucket,
+        newsapi_secret.arn,
+        openai_secret.arn,
+        anthropic_secret.arn,
+        email_password_secret.arn
+    ).apply(lambda args: json.dumps([{
+        "name": f"{project_name}-ai-container",
+        "image": f"{args[0]}:latest",
+        "essential": True,
+        "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+                "awslogs-group": args[1],
+                "awslogs-region": region,
+                "awslogs-stream-prefix": "ecs-ai"
+            }
+        },
+        "environment": [
+            {"name": "AWS_USE_S3", "value": "true"},
+            {"name": "S3_BUCKET_NAME", "value": args[2]},
+            {"name": "AWS_DEFAULT_REGION", "value": region},
+            {"name": "NEWSLETTER_PROFILE", "value": "ai"}
+        ],
+        "secrets": [
+            {"name": "NEWSAPI_KEY", "valueFrom": args[3]},
+            {"name": "OPENAI_API_KEY", "valueFrom": args[4]},
+            {"name": "ANTHROPIC_API_KEY", "valueFrom": args[5]},
+            {"name": "EMAIL_PASSWORD", "valueFrom": args[6]}
+        ]
+    }]))
+)
+
+ai_schedule_target = aws.cloudwatch.EventTarget(
+    "ai-schedule-target",
+    rule=ai_schedule_rule.name,
+    arn=ecs_cluster.arn,
+    role_arn=eventbridge_role.arn,
+    ecs_target=aws.cloudwatch.EventTargetEcsTargetArgs(
+        task_definition_arn=ai_task_definition.arn,
+        launch_type="FARGATE",
+        network_configuration=aws.cloudwatch.EventTargetEcsTargetNetworkConfigurationArgs(
+            security_groups=[security_group.id],
+            subnets=[public_subnet_1.id, public_subnet_2.id],
+            assign_public_ip=True
+        )
+    )
+)
+
+# EventBridge policy (moved here after task definitions are created)
+eventbridge_policy = aws.iam.RolePolicy(
+    "eventbridge-policy",
+    role=eventbridge_role.id,
+    policy=pulumi.Output.all(
+        tech_task_definition.arn,
+        geo_task_definition.arn,
+        ai_task_definition.arn,
+        task_execution_role.arn,
+        task_role.arn
+    ).apply(lambda arns: json.dumps({
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Action": ["ecs:RunTask"],
+                "Resource": [arns[0], arns[1], arns[2]]
+            },
+            {
+                "Effect": "Allow",
+                "Action": ["iam:PassRole"],
+                "Resource": [arns[3], arns[4]]
+            }
+        ]
+    }))
+)
+
 # Exports
 pulumi.export("s3_bucket_name", preferences_bucket.bucket)
 pulumi.export("ecr_repository_uri", ecr_repository.repository_url)
 pulumi.export("ecs_cluster_name", ecs_cluster.name)
-pulumi.export("task_definition_arn", task_definition.arn)
+pulumi.export("tech_task_definition_arn", tech_task_definition.arn)
+pulumi.export("geo_task_definition_arn", geo_task_definition.arn)
+pulumi.export("ai_task_definition_arn", ai_task_definition.arn)
 pulumi.export("vpc_id", vpc.id)
 pulumi.export("security_group_id", security_group.id)

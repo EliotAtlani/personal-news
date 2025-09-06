@@ -1,16 +1,27 @@
-# Personal News Digest
+# Personal News Digest - Multi-Profile System
 
-An AI-powered daily news digest that fetches the latest news based on your interests, generates intelligent summaries, and sends you a personalized newsletter via email.
+An AI-powered weekly news digest system that delivers specialized newsletters based on distinct topic profiles, with intelligent summaries and beautiful email templates.
+
+## Newsletter Profiles
+
+🚀 **Tech Weekly** - Mondays @ 12:00 UTC  
+Software engineering, programming, DevOps, cloud computing, and developer tools
+
+🌍 **Geopolitics Weekly** - Wednesdays @ 12:00 UTC  
+International conflicts, foreign policy, defense, security, and diplomacy
+
+🤖 **AI Weekly** - Fridays @ 12:00 UTC  
+Artificial intelligence, GenAI, machine learning, and AI research
 
 ## Features
 
-- **Multi-source news aggregation**: NewsAPI, The Guardian, RSS feeds
-- **AI-powered summaries**: OpenAI GPT or Anthropic Claude
-- **Smart filtering**: Relevance scoring and duplicate removal
-- **Personalized content**: Based on your topics and preferences
-- **Beautiful newsletters**: HTML email templates with mobile support
-- **Daily automation**: Scheduled delivery at your preferred time
-- **Easy configuration**: JSON-based settings with environment variable support
+- **Multi-profile newsletters**: Three distinct weekly newsletters with specialized content
+- **Multi-source news aggregation**: NewsAPI, The Guardian, specialized sources per profile
+- **AI-powered summaries**: OpenAI GPT or Anthropic Claude with profile-specific prompting
+- **Smart filtering**: Relevance scoring, duplicate removal, and article history tracking
+- **Profile-specific templates**: Unique styling and branding for each newsletter
+- **Weekly automation**: Scheduled delivery via AWS EventBridge
+- **Cloud deployment**: AWS ECS Fargate with S3 configuration storage
 
 ## Quick Start
 
@@ -30,18 +41,23 @@ An AI-powered daily news digest that fetches the latest news based on your inter
    uv run python run.py test
    ```
 
-4. **Run once**:
+4. **Run specific profile**:
    ```bash
-   uv run python run.py run
+   uv run python run.py run --profile tech        # Tech newsletter
+   uv run python run.py run --profile geopolitics # Geopolitics newsletter
+   uv run python run.py run --profile ai          # AI newsletter
+   uv run python run.py run                       # Defaults to tech
    ```
 
-5. **For daily automation**, set up a cron job:
+5. **For cloud deployment**:
    ```bash
-   # Edit your crontab
-   crontab -e
+   # Deploy AWS infrastructure
+   cd infrastructure/
+   pulumi up
    
-   # Add this line for daily 8:00 AM execution
-   0 8 * * * cd /path/to/personal-news && /usr/local/bin/uv run python run.py run
+   # Deploy application to ECS
+   ./scripts/deploy-ecs.sh latest all  # All profiles
+   ./scripts/deploy-ecs.sh latest tech # Specific profile
    ```
 
 ## Configuration
@@ -59,39 +75,93 @@ An AI-powered daily news digest that fetches the latest news based on your inter
 2. Generate an app password: [Google Account Settings](https://myaccount.google.com/apppasswords)
 3. Use the app password in your configuration
 
-### Configuration File
+### Multi-Profile Configuration
 
-Edit `config/preferences.json`:
+The system uses a multi-profile configuration in `config/preferences.json`:
 
 ```json
 {
-    "user": {
-        "email": "your-email@example.com",
-        "name": "Your Name",
-        "timezone": "UTC"
-    },
-    "topics": [
-        "artificial intelligence",
-        "climate change",
-        "technology",
-        "space exploration"
-    ],
-    "schedule": {
-        "time": "08:00",
-        "enabled": true
-    },
-    "content": {
-        "max_articles": 10,
+  "user": {
+    "email": "your-email@example.com",
+    "name": "Your Name",
+    "timezone": "UTC"
+  },
+  "profiles": {
+    "tech": {
+      "name": "Tech & Software Engineering Weekly",
+      "subject_prefix": "Tech Weekly",
+      "schedule": {
+        "day_of_week": 1,
+        "time": "12:00"
+      },
+      "topics": [
+        "software engineering",
+        "programming languages",
+        "developer tools",
+        "DevOps",
+        "cloud computing"
+      ],
+      "sources": [
+        "stackoverflow-blog",
+        "hackernews",
+        "freecodecamp",
+        "aws-blog"
+      ],
+      "content": {
+        "time_range": "last_week",
+        "max_articles": 5,
+        "min_articles": 2,
         "summary_length": "medium"
+      }
     },
-    "email": {
-        "sender_email": "your-sender@gmail.com",
-        "sender_password": "your-app-password"
+    "geopolitics": {
+      "name": "Geopolitics & Conflicts Weekly",
+      "subject_prefix": "Geo Weekly",
+      "schedule": {
+        "day_of_week": 3,
+        "time": "12:00"
+      },
+      "topics": [
+        "geopolitics",
+        "international conflicts",
+        "foreign policy",
+        "defense"
+      ],
+      "sources": [
+        "bbc-world",
+        "reuters-world",
+        "guardian-world"
+      ]
     },
-    "api_keys": {
-        "newsapi": "your-newsapi-key",
-        "openai": "your-openai-key"
+    "ai": {
+      "name": "AI & GenAI Weekly",
+      "subject_prefix": "AI Weekly",
+      "schedule": {
+        "day_of_week": 5,
+        "time": "12:00"
+      },
+      "topics": [
+        "artificial intelligence",
+        "GenAI",
+        "machine learning"
+      ],
+      "sources": [
+        "mit-tech-review",
+        "towards-data-science"
+      ]
     }
+  },
+  "email": {
+    "sender_email": "your-sender@gmail.com",
+    "sender_password": "your-app-password"
+  },
+  "api_keys": {
+    "newsapi": "your-newsapi-key",
+    "openai": "your-openai-key"
+  },
+  "history": {
+    "sent_articles": []
+  }
 }
 ```
 
@@ -108,11 +178,26 @@ export EMAIL_PASSWORD="your-app-password"
 
 ## Commands
 
-- `setup`: Interactive configuration setup
+- `setup`: Interactive configuration setup (creates multi-profile config)
 - `test`: Test email configuration  
-- `run`: Generate and send newsletter once
+- `run --profile <name>`: Generate and send newsletter for specific profile
+- `run`: Generate and send newsletter (defaults to tech profile)
 
-For daily automation, use cron instead of the built-in scheduler to avoid potential conflicts.
+### Profile Commands
+```bash
+uv run python run.py run --profile tech        # Monday tech newsletter
+uv run python run.py run --profile geopolitics # Wednesday geopolitics newsletter  
+uv run python run.py run --profile ai          # Friday AI newsletter
+```
+
+### Cloud Deployment Commands
+```bash
+./scripts/deploy-ecs.sh                    # Deploy all profiles with latest image
+./scripts/deploy-ecs.sh abc123def         # Deploy all profiles with specific image
+./scripts/deploy-ecs.sh latest tech       # Deploy tech profile only
+./scripts/deploy-ecs.sh latest geopolitics # Deploy geopolitics profile only
+./scripts/deploy-ecs.sh latest ai         # Deploy AI profile only
+```
 
 ## Development
 
@@ -121,45 +206,96 @@ For daily automation, use cron instead of the built-in scheduler to avoid potent
 ```
 personal-news/
 ├── src/
-│   ├── config/         # Configuration management
+│   ├── config/         # Multi-profile configuration management
 │   ├── news/           # News fetching and filtering
 │   ├── ai/             # AI summarization
 │   ├── email/          # Email templating and sending
-│   ├── scheduler.py    # Daily scheduling
 │   └── main.py         # CLI interface
-├── templates/          # Email templates
-├── config/             # Configuration files
-└── logs/               # Application logs
+├── templates/          # Profile-specific email templates
+│   ├── tech-newsletter.html
+│   ├── geopolitics-newsletter.html  
+│   ├── ai-newsletter.html
+│   └── newsletter.html # Default template
+├── infrastructure/     # AWS Pulumi infrastructure
+├── scripts/           # Deployment and utility scripts
+├── config/            # Configuration files
+└── logs/              # Application logs
+```
+
+### Development Tools
+
+The project uses **Ruff** for linting and **Black** for formatting:
+
+```bash
+# Check code with ruff
+make lint
+# or: uv run ruff check src/
+
+# Format code with black
+make format  
+# or: uv run black src/
+
+# Auto-fix linting issues
+make fix
+# or: uv run ruff check --fix src/
+
+# Run all checks (lint + format check)
+make check
+
+# Complete development workflow (fix + format + check)
+make dev-check
 ```
 
 ### Running Tests
 
 ```bash
-uv run pytest
+make test
+# or: uv run pytest
 ```
 
-### Code Formatting
+### Development Workflow
 
 ```bash
-uv run black src/
-uv run isort src/
+# Set up development environment
+make dev-setup
+
+# Before committing, run:
+make dev-check
+
+# Available make commands
+make help
 ```
 
 ## Customization
 
-### Topics and Keywords
+### Adding New Profiles
 
-The system automatically expands your topics with related keywords. For example:
-- "artificial intelligence" → AI, machine learning, neural networks, GPT
-- "climate change" → global warming, carbon emissions, renewable energy
+1. Add profile configuration to `config/preferences.json`
+2. Create new email template in `templates/`
+3. Update infrastructure with new EventBridge schedule
+4. Deploy with updated configuration
 
-### Email Template
+### Profile-Specific Templates
 
-Customize the newsletter appearance by editing `templates/newsletter.html`.
+Each profile has its own template with unique styling:
+- `tech-newsletter.html` - Blue theme, code-focused styling
+- `geopolitics-newsletter.html` - Red theme, formal typography  
+- `ai-newsletter.html` - Purple theme, futuristic gradients
 
 ### News Sources
 
-Add RSS feeds or modify API sources in `src/news/fetchers.py`.
+Each profile has specialized news sources:
+- **Tech**: Stack Overflow Blog, HackerNews, AWS Blog, Netflix Tech Blog
+- **Geopolitics**: BBC World, Reuters, Guardian World, Foreign Affairs
+- **AI**: MIT Tech Review, Towards Data Science, VentureBeat
+
+### Article History & Deduplication
+
+The system tracks sent articles in `history.sent_articles` to prevent duplicates across all profiles. Articles are filtered by:
+- URL deduplication
+- Time range (last week for each profile)
+- Relevance scoring
+- Profile-specific topics
 
 ## Troubleshooting
 
